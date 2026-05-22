@@ -12,7 +12,9 @@ from typing import Any, Dict, List, Optional
 import yaml
 from tqdm import tqdm
 from vidore3_ablations.data import load_vidore_dataset
+from vidore3_ablations.device_utils import configure_pytorch_memory, detect_vram_profile, get_cuda_vram_gb
 from vidore3_ablations.evaluator import aggregate_results, evaluate_retrieval
+from vidore3_ablations.low_vram import VramProfile, apply_vram_profile_args
 
 from vidore3_ablations.pipelines.registry import build_pipeline
 
@@ -73,6 +75,8 @@ def run_single_ablation(
     output_dir: Path,
     max_queries: Optional[int],
     max_corpus: Optional[int],
+    low_vram: bool = False,
+    vram_profile: VramProfile = "default",
 ) -> Dict[str, Any]:
     print(f"\n=== Ablation: {name} ===")
     print(spec.get("description", ""))
@@ -95,7 +99,14 @@ def run_single_ablation(
         max_corpus,
     )
 
-    pipeline = build_pipeline(spec["pipeline"], **spec.get("args", {}))
+    pipeline_args = dict(spec.get("args", {}))
+    profile = vram_profile
+    if low_vram and profile == "default":
+        profile = "low_12gb"
+    if profile != "default":
+        pipeline_args = apply_vram_profile_args(spec["pipeline"], pipeline_args, profile)
+
+    pipeline = build_pipeline(spec["pipeline"], **pipeline_args)
     started = time.time()
     results = evaluate_retrieval(
         pipeline=pipeline,
@@ -117,13 +128,14 @@ def run_single_ablation(
         "ablation": name,
         "description": spec.get("description"),
         "pipeline": spec["pipeline"],
-        "pipeline_args": spec.get("args", {}),
+        "pipeline_args": pipeline_args,
         "dataset": dataset_name,
         "language": language,
         "split": split,
         "metrics_requested": metrics,
         "grounding_metrics_requested": grounding_metrics,
         "evaluate_grounding": evaluate_grounding,
+        "vram_profile": vram_profile,
         "num_queries": len(query_ids),
         "num_corpus": len(corpus_ids),
         "elapsed_seconds": elapsed,
@@ -159,9 +171,43 @@ def main() -> None:
     parser.add_argument("--max-queries", type=int, default=None, help="Override config subsample for queries")
     parser.add_argument("--max-corpus", type=int, default=None, help="Override config subsample for corpus")
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument(
+        "--vram-profile",
+        choices=["auto", "default", "low_12gb", "ultra_8gb"],
+        default="auto",
+        help="GPU memory profile (auto detects 8 GB / 12 GB laptop GPUs)",
+    )
+    parser.add_argument(
+        "--low-vram",
+        action="store_true",
+        help="Alias for --vram-profile low_12gb",
+    )
     args = parser.parse_args()
 
+    configure_pytorch_memory()
+    if args.vram_profile == "auto":
+        vram_profile: VramProfile = detect_vram_profile()
+    elif args.vram_profile == "default":
+        vram_profile = "default"
+    else:
+        vram_profile = args.vram_profile  # type: ignore[assignment]
+
+    if args.low_vram and vram_profile == "default":
+        vram_profile = "low_12gb"
+
+    if vram_profile != "default":
+        vram = get_cuda_vram_gb()
+        label = {"low_12gb": "~12 GB", "ultra_8gb": "~8 GB laptop"}.get(vram_profile, vram_profile)
+        if vram is not None:
+            print(f"VRAM profile '{label}' enabled ({vram:.1f} GB GPU detected).")
+        else:
+            print(f"VRAM profile '{label}' enabled.")
+
     config = load_config(args.config)
+    config_profile = config.get("vram_profile")
+    if config_profile and config_profile != "default" and vram_profile == "default":
+        vram_profile = config_profile  # type: ignore[assignment]
+        print(f"Using VRAM profile from config: {vram_profile}")
     ablation_names = args.ablations or list(config["ablations"].keys())
     output_dir = args.output_dir or Path(config.get("output_dir", "results"))
     max_queries = args.max_queries if args.max_queries is not None else config.get("max_queries")
@@ -183,6 +229,8 @@ def main() -> None:
             output_dir=output_dir,
             max_queries=max_queries,
             max_corpus=max_corpus,
+            low_vram=args.low_vram,
+            vram_profile=vram_profile,
         )
         overall = payload["results"].get("overall", payload["results"])
         all_metrics = list(config.get("metrics", [])) + list(config.get("grounding_metrics", []))

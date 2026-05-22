@@ -1,0 +1,76 @@
+# ViDoRe v3 industrial — RTX 4070 Laptop (8 GB VRAM) profile
+# Use: python -m vidore3_ablations.run_ablations --config configs/ablations_rtx4070_8gb.yaml
+
+dataset: vidore/vidore_v3_industrial
+language: english
+split: test
+vram_profile: ultra_8gb
+
+metrics:
+  - ndcg_cut_5
+  - ndcg_cut_10
+  - recall_5
+  - recall_10
+  - map
+
+evaluate_grounding: true
+
+grounding_metrics:
+  - grounding_iou_at_1
+  - grounding_f1_at_1
+  - grounding_iou_at_5
+  - grounded_success_iou50_at_1
+  - localization_recall_at_5
+  - localization_recall_at_10
+
+max_queries: null
+max_corpus: null
+output_dir: results
+
+ablations:
+  random:
+    description: Random ranking baseline
+    pipeline: random
+    args:
+      seed: 42
+
+  bm25_ocr:
+    description: Sparse lexical retrieval on OCR markdown text
+    pipeline: bm25_text
+    args: {}
+
+  dense_text_ocr:
+    description: Dense bi-encoder on OCR (CPU, saves GPU for visual models)
+    pipeline: dense_text
+    args:
+      model_name: sentence-transformers/all-MiniLM-L6-v2
+      batch_size: 16
+      device: cpu
+
+  clip_visual:
+    description: CLIP visual retrieval at 75% resolution
+    pipeline: clip_visual
+    args:
+      model_name: openai/clip-vit-base-patch32
+      batch_size: 4
+      image_scale: 0.75
+
+  colpali_late_interaction:
+    description: ColPali with CPU MaxSim and partial GPU offload (7 GiB cap)
+    pipeline: colpali_late_interaction
+    args:
+      model_name: vidore/colpali-v1.3
+      batch_size: 1
+      score_batch_size: 8
+      score_device: cpu
+      max_gpu_memory: 7GiB
+
+  hybrid_rrf:
+    description: RRF fusion with text on CPU and small CLIP batches
+    pipeline: hybrid_rrf
+    args:
+      text_model: sentence-transformers/all-MiniLM-L6-v2
+      visual_model: openai/clip-vit-base-patch32
+      rrf_k: 60
+      batch_size: 4
+      text_device: cpu

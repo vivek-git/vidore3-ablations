@@ -74,6 +74,50 @@ pip install -e .
 
 You need a Hugging Face account/token if the dataset requires authentication. Set `HF_TOKEN` or run `huggingface-cli login`.
 
+## RTX 3060 / 12 GB VRAM
+
+The defaults are tuned for consumer GPUs with ~12 GB VRAM:
+
+| Pipeline | Memory strategy |
+|----------|-----------------|
+| **ColPali** | `batch_size=1`, fp16 weights, MaxSim scoring on **CPU** |
+| **CLIP** | `batch_size=8`, fp16 autocast, embeddings stored on CPU |
+| **Hybrid** | Text encoder on **CPU**, CLIP on GPU, models released between stages |
+| **Dense text** | Runs on GPU by default; hybrid ablations pin it to CPU |
+
+Low-VRAM mode activates automatically when ≤16 GB VRAM is detected, or force it with:
+
+```powershell
+python -m vidore3_ablations.run_ablations --low-vram
+```
+
+For the full industrial corpus (~5,244 pages), expect ~6 GB VRAM for ColPali weights plus headroom for single-page encoding. System RAM holds passage embeddings (~3–4 GB) while MaxSim runs on CPU.
+
+Optional (Linux): `export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` — set automatically at startup.
+
+### RTX 4070 Laptop / 8 GB VRAM
+
+Use the dedicated branch config and profile:
+
+```powershell
+git checkout rtx4070-8gb
+python -m vidore3_ablations.run_ablations --config configs/ablations_rtx4070_8gb.yaml
+# or on any config:
+python -m vidore3_ablations.run_ablations --vram-profile ultra_8gb
+```
+
+8 GB settings vs 12 GB:
+
+| Setting | 12 GB (`low_12gb`) | 8 GB laptop (`ultra_8gb`) |
+|---------|-------------------|---------------------------|
+| ColPali batch | 1 | 1 |
+| ColPali MaxSim | CPU, batch 16 | CPU, batch 8 |
+| ColPali GPU cap | full GPU | 7 GiB + CPU offload |
+| CLIP batch | 8 | 4 @ 75% resolution |
+| Text encoders | CPU in hybrid | CPU everywhere |
+
+Auto-detection picks `ultra_8gb` when ≤8.5 GB VRAM is reported.
+
 ## Quick smoke test
 
 Run on a small subsample before the full benchmark (~5k pages):
@@ -102,7 +146,7 @@ python -m vidore3_ablations.analyze_results --results-dir results
 2. Register it in `pipelines/registry.py`.
 3. Add an entry under `ablations:` in `configs/ablations.yaml`.
 
-ColPali requires a GPU with ~8GB+ VRAM for full-corpus indexing. Use `--max-corpus` for smoke tests on CPU.
+ColPali requires a GPU with ~8GB+ VRAM for full-corpus indexing on a 12 GB card with the default settings above. Use `--max-corpus` for quick iteration.
 
 ## References
 

@@ -57,7 +57,7 @@ ablations:
     pipeline: clip_visual
     args:
       model_name: openai/clip-vit-base-patch32
-      batch_size: 32
+      batch_size: 8
       image_scale: 1.0
 
   clip_visual_half_res:
@@ -65,7 +65,7 @@ ablations:
     pipeline: clip_visual
     args:
       model_name: openai/clip-vit-base-patch32
-      batch_size: 32
+      batch_size: 16
       image_scale: 0.5
 
   clip_text_on_ocr:
@@ -82,7 +82,8 @@ ablations:
       text_model: sentence-transformers/all-MiniLM-L6-v2
       visual_model: openai/clip-vit-base-patch32
       rrf_k: 60
-      batch_size: 32
+      batch_size: 8
+      text_device: cpu
 
   hybrid_weighted:
     description: Weighted score fusion (0.5 text + 0.5 visual)
@@ -91,14 +92,15 @@ ablations:
       text_model: sentence-transformers/all-MiniLM-L6-v2
       visual_model: openai/clip-vit-base-patch32
       text_weight: 0.5
-      batch_size: 32
+      batch_size: 8
+      text_device: cpu
 
   visual_no_text:
     description: CLIP visual with OCR text blanked (purely visual signal)
     pipeline: clip_visual
     args:
       model_name: openai/clip-vit-base-patch32
-      batch_size: 32
+      batch_size: 8
       blank_corpus_text: true
 
   colpali_late_interaction:
@@ -106,5 +108,6 @@ ablations:
     pipeline: colpali_late_interaction
     args:
       model_name: vidore/colpali-v1.3
-      batch_size: 4
-      score_batch_size: 128
+      batch_size: 1
+      score_batch_size: 32
+      score_device: cpu

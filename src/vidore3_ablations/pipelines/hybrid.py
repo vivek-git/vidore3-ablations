@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from vidore3_ablations.device_utils import DevicePreference, empty_cuda_cache, release_model
 from vidore3_ablations.evaluator import BasePipeline
 
 from vidore3_ablations.pipelines.clip_visual import CLIPVisualPipeline
@@ -20,6 +20,7 @@ class _DualModalityMixin:
     visual_model: str
     batch_size: int
     top_k: int
+    text_device: DevicePreference
 
     def _build_modal_scores(
         self,
@@ -30,24 +31,30 @@ class _DualModalityMixin:
             model_name=self.text_model,
             batch_size=self.batch_size,
             top_k=len(self.corpus_ids),
+            device=self.text_device,
         )
+        text_pipe.corpus_ids = self.corpus_ids
+        text_pipe.corpus_images = self.corpus_images
+        text_pipe.corpus_texts = self.corpus_texts
+        text_pipe.index(self.corpus_ids, self.corpus_images, self.corpus_texts)
+        text_results = text_pipe.search(query_ids, queries)
+        release_model(text_pipe._model)
+        text_pipe._model = None
+        empty_cuda_cache()
+
         visual_pipe = CLIPVisualPipeline(
             model_name=self.visual_model,
             batch_size=self.batch_size,
             top_k=len(self.corpus_ids),
         )
-        text_pipe.corpus_ids = self.corpus_ids
-        text_pipe.corpus_images = self.corpus_images
-        text_pipe.corpus_texts = self.corpus_texts
         visual_pipe.corpus_ids = self.corpus_ids
         visual_pipe.corpus_images = self.corpus_images
         visual_pipe.corpus_texts = self.corpus_texts
-
-        text_pipe.index(self.corpus_ids, self.corpus_images, self.corpus_texts)
         visual_pipe.index(self.corpus_ids, self.corpus_images, self.corpus_texts)
-
-        text_results = text_pipe.search(query_ids, queries)
         visual_results = visual_pipe.search(query_ids, queries)
+        release_model(visual_pipe._model)
+        visual_pipe._model = None
+        empty_cuda_cache()
 
         id_to_idx = {doc_id: idx for idx, doc_id in enumerate(self.corpus_ids)}
         text_matrix = np.zeros((len(query_ids), len(self.corpus_ids)), dtype=np.float32)
@@ -70,14 +77,16 @@ class HybridRRFPipeline(BasePipeline, _DualModalityMixin):
         text_model: str = "sentence-transformers/all-MiniLM-L6-v2",
         visual_model: str = "openai/clip-vit-base-patch32",
         rrf_k: int = 60,
-        batch_size: int = 32,
+        batch_size: int = 8,
         top_k: int = 100,
+        text_device: DevicePreference = "cpu",
     ):
         self.text_model = text_model
         self.visual_model = visual_model
         self.rrf_k = rrf_k
         self.batch_size = batch_size
         self.top_k = top_k
+        self.text_device = text_device
 
     def search(self, query_ids: List[str], queries: List[str]) -> Dict[str, Dict[str, float]]:
         text_matrix, visual_matrix = self._build_modal_scores(query_ids, queries)
@@ -106,14 +115,16 @@ class HybridWeightedPipeline(BasePipeline, _DualModalityMixin):
         text_model: str = "sentence-transformers/all-MiniLM-L6-v2",
         visual_model: str = "openai/clip-vit-base-patch32",
         text_weight: float = 0.5,
-        batch_size: int = 32,
+        batch_size: int = 8,
         top_k: int = 100,
+        text_device: DevicePreference = "cpu",
     ):
         self.text_model = text_model
         self.visual_model = visual_model
         self.text_weight = text_weight
         self.batch_size = batch_size
         self.top_k = top_k
+        self.text_device = text_device
 
     def search(self, query_ids: List[str], queries: List[str]) -> Dict[str, Dict[str, float]]:
         text_matrix, visual_matrix = self._build_modal_scores(query_ids, queries)
