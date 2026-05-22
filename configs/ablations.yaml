@@ -1,0 +1,93 @@
+# ViDoRe v3 industrial (technical documents) ablation configuration
+dataset: vidore/vidore_v3_industrial
+language: english
+split: test
+
+metrics:
+  - ndcg_cut_5
+  - ndcg_cut_10
+  - recall_5
+  - recall_10
+  - map
+
+# Subsample for quick smoke tests (null = full dataset)
+max_queries: null
+max_corpus: null
+
+output_dir: results
+
+ablations:
+  random:
+    description: Random ranking baseline
+    pipeline: random
+    args:
+      seed: 42
+
+  bm25_ocr:
+    description: Sparse lexical retrieval on OCR markdown text
+    pipeline: bm25_text
+    args: {}
+
+  dense_text_ocr:
+    description: Dense bi-encoder on OCR markdown (text-only modality)
+    pipeline: dense_text
+    args:
+      model_name: sentence-transformers/all-MiniLM-L6-v2
+      batch_size: 64
+
+  clip_visual:
+    description: Dense CLIP image-text similarity (visual modality)
+    pipeline: clip_visual
+    args:
+      model_name: openai/clip-vit-base-patch32
+      batch_size: 32
+      image_scale: 1.0
+
+  clip_visual_half_res:
+    description: CLIP visual retrieval at 50% image resolution
+    pipeline: clip_visual
+    args:
+      model_name: openai/clip-vit-base-patch32
+      batch_size: 32
+      image_scale: 0.5
+
+  clip_text_on_ocr:
+    description: CLIP text encoder on OCR (no page images)
+    pipeline: clip_text_on_ocr
+    args:
+      model_name: openai/clip-vit-base-patch32
+      batch_size: 64
+
+  hybrid_rrf:
+    description: Reciprocal rank fusion of dense text OCR + CLIP visual
+    pipeline: hybrid_rrf
+    args:
+      text_model: sentence-transformers/all-MiniLM-L6-v2
+      visual_model: openai/clip-vit-base-patch32
+      rrf_k: 60
+      batch_size: 32
+
+  hybrid_weighted:
+    description: Weighted score fusion (0.5 text + 0.5 visual)
+    pipeline: hybrid_weighted
+    args:
+      text_model: sentence-transformers/all-MiniLM-L6-v2
+      visual_model: openai/clip-vit-base-patch32
+      text_weight: 0.5
+      batch_size: 32
+
+  visual_no_text:
+    description: CLIP visual with OCR text blanked (purely visual signal)
+    pipeline: clip_visual
+    args:
+      model_name: openai/clip-vit-base-patch32
+      batch_size: 32
+      blank_corpus_text: true
+
+  colpali_late_interaction:
+    description: ColPali MaxSim late interaction over page-image patch embeddings
+    pipeline: colpali_late_interaction
+    args:
+      model_name: vidore/colpali-v1.3
+      batch_size: 4
+      score_batch_size: 128
