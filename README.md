@@ -23,6 +23,46 @@ Metrics: NDCG@5/10, Recall@5/10, MAP (via `pytrec_eval`).
 
 The project includes its own ViDoRe v3 dataset loader and evaluator (compatible with the [vidore-benchmark](https://github.com/illuin-tech/vidore-benchmark) pipeline API).
 
+## Evaluation metrics
+
+### Page retrieval (visual document search)
+
+Standard IR metrics over page-level relevance judgments (`qrels`):
+
+| Metric | Meaning |
+|--------|---------|
+| `ndcg_cut_k` | Ranking quality with graded relevance (1=critical, 2=full) |
+| `recall_k` | Share of queries with any relevant page in top-k |
+| `map` | Mean average precision across queries |
+
+### Region grounding (manual evidence zones)
+
+Human annotators mark bounding boxes on relevant pages. Following the [ViDoRe v3 protocol](https://arxiv.org/abs/2601.08620), each annotator's boxes are merged into a pixel zone and compared with predictions:
+
+| Metric | Meaning |
+|--------|---------|
+| `grounding_iou_at_1` | Best-match **IoU** on the rank-1 retrieved page |
+| `grounding_f1_at_1` | Best-match **F1 / Dice** on the rank-1 page |
+| `grounding_precision_at_1` | Pixel precision of predicted zone on rank-1 |
+| `grounding_recall_at_1` | Pixel recall of predicted zone on rank-1 |
+| `grounding_iou_at_5` | Max best-match IoU among top-5 pages |
+| `grounding_f1_at_5` | Max best-match F1 among top-5 pages |
+| `box_precision_at_0.5` | Greedy box-level precision at IoU ≥ 0.5 |
+| `box_recall_at_0.5` | Greedy box-level recall at IoU ≥ 0.5 |
+
+**Best-match rule:** when multiple annotators labeled a page, the score uses the annotator with the highest F1 (ViDoRe accounts for subjective evidence selection).
+
+### End-to-end success
+
+| Metric | Meaning |
+|--------|---------|
+| `grounded_success_iou50_at_1` | Rank-1 page is relevant **and** zone IoU ≥ 0.5 |
+| `grounded_success_f1_at_1` | Rank-1 page is relevant **and** zone F1 ≥ 0.5 |
+| `localization_recall_at_k` | Any bbox-annotated relevant page appears in top-k |
+| `retrieval_and_grounding_at_1` | Rank-1 page is relevant **and** grounding F1 > 0 |
+
+Retrieval-only pipelines default to a **full-page** predicted zone via `BasePipeline.ground()`. Override `ground()` to evaluate region-specific models.
+
 ## Setup
 
 ```powershell

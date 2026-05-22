@@ -20,12 +20,23 @@ AVAILABLE_DATASETS = [
 
 TECHNICAL_DOCUMENTS_DATASET = "vidore/vidore_v3_industrial"
 
+GroundTruthBoxes = Dict[str, Dict[str, List[dict]]]
+
 
 def load_vidore_dataset(
     dataset_name: str,
     split: str = "test",
     language: str | None = None,
-) -> Tuple[List[str], List[str], List[str], List[Image.Image], List[str], Dict[str, Dict[str, int]], Dict[str, str]]:
+) -> Tuple[
+    List[str],
+    List[str],
+    List[str],
+    List[Image.Image],
+    List[str],
+    Dict[str, Dict[str, int]],
+    Dict[str, str],
+    GroundTruthBoxes,
+]:
     if dataset_name not in AVAILABLE_DATASETS:
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
@@ -50,16 +61,20 @@ def load_vidore_dataset(
 
     query_id_set = set(query_ids)
     qrels: Dict[str, Dict[str, int]] = {}
+    qrels_boxes: GroundTruthBoxes = {}
     for item in qrels_ds:
         query_id = str(item["query_id"])
         if query_id not in query_id_set:
             continue
         corpus_id = str(item["corpus_id"])
         qrels.setdefault(query_id, {})[corpus_id] = int(item["score"])
+        boxes = item.get("bounding_boxes") or []
+        if boxes:
+            qrels_boxes.setdefault(query_id, {})[corpus_id] = list(boxes)
 
     if not queries:
         raise ValueError(f"No queries found in {dataset_name}")
     if not corpus_images:
         raise ValueError(f"No corpus images found in {dataset_name}")
 
-    return query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages
+    return query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages, qrels_boxes

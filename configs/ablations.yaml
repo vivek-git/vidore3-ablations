@@ -10,6 +10,23 @@ metrics:
   - recall_10
   - map
 
+evaluate_grounding: true
+
+grounding_metrics:
+  - grounding_iou_at_1
+  - grounding_f1_at_1
+  - grounding_precision_at_1
+  - grounding_recall_at_1
+  - grounding_iou_at_5
+  - grounding_f1_at_5
+  - box_precision_at_0.5
+  - box_recall_at_0.5
+  - grounded_success_iou50_at_1
+  - grounded_success_f1_at_1
+  - localization_recall_at_5
+  - localization_recall_at_10
+  - retrieval_and_grounding_at_1
+
 # Subsample for quick smoke tests (null = full dataset)
 max_queries: null
 max_corpus: null

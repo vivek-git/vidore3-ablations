@@ -32,6 +32,7 @@ def subsample_dataset(
     corpus_images,
     corpus_texts: List[str],
     qrels: Dict[str, Dict[str, int]],
+    qrels_boxes: Dict[str, Dict[str, List[dict]]],
     query_languages: Dict[str, str],
     max_queries: Optional[int],
     max_corpus: Optional[int],
@@ -39,8 +40,8 @@ def subsample_dataset(
     if max_queries is not None:
         query_ids = query_ids[:max_queries]
         queries = queries[:max_queries]
-        query_set = set(query_ids)
         qrels = {qid: qrels[qid] for qid in query_ids if qid in qrels}
+        qrels_boxes = {qid: qrels_boxes[qid] for qid in query_ids if qid in qrels_boxes}
         query_languages = {qid: query_languages[qid] for qid in query_ids if qid in query_languages}
 
     if max_corpus is not None:
@@ -52,8 +53,12 @@ def subsample_dataset(
             qid: {cid: score for cid, score in rels.items() if cid in keep_ids}
             for qid, rels in qrels.items()
         }
+        qrels_boxes = {
+            qid: {cid: boxes for cid, boxes in rels.items() if cid in keep_ids}
+            for qid, rels in qrels_boxes.items()
+        }
 
-    return query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages
+    return query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, qrels_boxes, query_languages
 
 
 def run_single_ablation(
@@ -63,6 +68,8 @@ def run_single_ablation(
     language: str,
     split: str,
     metrics: List[str],
+    grounding_metrics: List[str],
+    evaluate_grounding: bool,
     output_dir: Path,
     max_queries: Optional[int],
     max_corpus: Optional[int],
@@ -70,18 +77,19 @@ def run_single_ablation(
     print(f"\n=== Ablation: {name} ===")
     print(spec.get("description", ""))
 
-    query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages = load_vidore_dataset(
+    query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages, qrels_boxes = load_vidore_dataset(
         dataset_name=dataset_name,
         split=split,
         language=language,
     )
-    query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages = subsample_dataset(
+    query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, qrels_boxes, query_languages = subsample_dataset(
         query_ids,
         queries,
         corpus_ids,
         corpus_images,
         corpus_texts,
         qrels,
+        qrels_boxes,
         query_languages,
         max_queries,
         max_corpus,
@@ -97,8 +105,10 @@ def run_single_ablation(
         corpus_images=corpus_images,
         corpus_texts=corpus_texts,
         qrels=qrels,
+        qrels_boxes=qrels_boxes,
         dataset_name=dataset_name,
         metrics=metrics,
+        evaluate_region_grounding=evaluate_grounding,
     )
     aggregated = aggregate_results(results, query_languages=query_languages)
     elapsed = time.time() - started
@@ -112,6 +122,8 @@ def run_single_ablation(
         "language": language,
         "split": split,
         "metrics_requested": metrics,
+        "grounding_metrics_requested": grounding_metrics,
+        "evaluate_grounding": evaluate_grounding,
         "num_queries": len(query_ids),
         "num_corpus": len(corpus_ids),
         "elapsed_seconds": elapsed,
@@ -132,6 +144,10 @@ def run_single_ablation(
         print(f"NDCG@10: {ndcg:.4f}")
     if recall is not None:
         print(f"Recall@10: {recall:.4f}")
+    for metric in grounding_metrics:
+        value = overall.get(metric)
+        if value is not None:
+            print(f"{metric}: {value:.4f}")
 
     return payload
 
@@ -162,16 +178,19 @@ def main() -> None:
             language=config.get("language"),
             split=config.get("split", "test"),
             metrics=config.get("metrics", ["ndcg_cut_10"]),
+            grounding_metrics=config.get("grounding_metrics", []),
+            evaluate_grounding=config.get("evaluate_grounding", True),
             output_dir=output_dir,
             max_queries=max_queries,
             max_corpus=max_corpus,
         )
         overall = payload["results"].get("overall", payload["results"])
+        all_metrics = list(config.get("metrics", [])) + list(config.get("grounding_metrics", []))
         summary_rows.append(
             {
                 "ablation": name,
                 "pipeline": payload["pipeline"],
-                **{metric: overall.get(metric) for metric in config.get("metrics", [])},
+                **{metric: overall.get(metric) for metric in all_metrics},
                 "elapsed_seconds": payload["elapsed_seconds"],
             }
         )
