@@ -140,6 +140,26 @@ Results are written to `results/<ablation>.json` plus `results/summary.json`.
 python -m vidore3_ablations.analyze_results --results-dir results
 ```
 
+## Visualize results
+
+Generate comparison charts (PNG) from `results/summary.json` or individual ablation JSON files:
+
+```powershell
+python -m vidore3_ablations.visualize_results --results-dir results
+# or: vidore3-viz --results-dir results
+```
+
+Outputs to `results/figures/`:
+- `dashboard.png` — 4-panel overview (retrieval, grounding, heatmap, runtime)
+- `retrieval_comparison.png` — NDCG / recall / MAP bars
+- `grounding_comparison.png` — IoU, F1, localization bars
+- `metrics_heatmap.png` — all metrics with column-normalized colors
+- `runtime_comparison.png` — elapsed seconds per ablation
+
+```powershell
+python -m vidore3_ablations.visualize_results --results-dir results --output-dir reports/figures
+```
+
 ## Extending
 
 1. Add a pipeline class inheriting `BasePipeline` in `src/vidore3_ablations/pipelines/`.

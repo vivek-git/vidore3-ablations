@@ -14,6 +14,7 @@ dependencies = [
     "pillow>=10.0.0",
     "numpy>=1.26.0",
     "pandas>=2.2.0",
+    "matplotlib>=3.8.0",
     "pyyaml>=6.0.0",
     "tqdm>=4.66.0",
     "colpali-engine>=0.3.1",
@@ -21,6 +22,7 @@ dependencies = [
 
 [project.scripts]
 vidore3-ablate = "vidore3_ablations.run_ablations:main"
+vidore3-viz = "vidore3_ablations.visualize_results:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]
