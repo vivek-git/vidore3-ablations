@@ -20,9 +20,15 @@ dependencies = [
     "colpali-engine>=0.3.1",
 ]
 
+[project.optional-dependencies]
+fiftyone = [
+    "fiftyone>=1.0.0",
+]
+
 [project.scripts]
 vidore3-ablate = "vidore3_ablations.run_ablations:main"
 vidore3-viz = "vidore3_ablations.visualize_results:main"
+vidore3-explore = "vidore3_ablations.launch_fiftyone:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]

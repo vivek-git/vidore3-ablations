@@ -160,7 +160,31 @@ Outputs to `results/figures/`:
 python -m vidore3_ablations.visualize_results --results-dir results --output-dir reports/figures
 ```
 
-## Extending
+## Explore with FiftyOne
+
+Interactively browse pages, queries, and human evidence bounding boxes:
+
+```powershell
+pip install -e ".[fiftyone]"
+python -m vidore3_ablations.launch_fiftyone --view qrels --max-queries 50 --max-corpus 200
+# or: vidore3-explore --view corpus
+```
+
+**Views**
+
+| View | Samples | Best for |
+|------|---------|----------|
+| `qrels` | One per (query, relevant page) | Navigating evidence regions per query |
+| `corpus` | One per document page | Browsing all pages and aggregated regions |
+| `queries` | One per query | Query-centric exploration with preview page |
+
+In the FiftyOne App:
+1. Enable the **`ground_truth`** label field in the sidebar to show evidence boxes
+2. Filter samples by `query_id`, `corpus_id`, or `relevance_score`
+3. Click samples to pan/zoom regions; inspect `query_text` and `markdown_preview` metadata
+
+Images are cached under `~/.cache/vidore3-ablations/fiftyone/`.
+
 
 1. Add a pipeline class inheriting `BasePipeline` in `src/vidore3_ablations/pipelines/`.
 2. Register it in `pipelines/registry.py`.
