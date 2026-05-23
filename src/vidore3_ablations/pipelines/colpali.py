@@ -7,7 +7,7 @@ from typing import Dict, List
 import torch
 from PIL import Image
 from tqdm import tqdm
-from vidore3_ablations.device_utils import (
+from vidore3_ablations.hardware.device import (
     DevicePreference,
     detect_vram_profile,
     empty_cuda_cache,
@@ -15,7 +15,7 @@ from vidore3_ablations.device_utils import (
     get_torch_device,
     resolve_score_device,
 )
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.utils import batch_iter, topk_scores
 

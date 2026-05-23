@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Type
 
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.bm25 import BM25TextPipeline
 from vidore3_ablations.pipelines.clip_visual import CLIPTextOnOCRPipeline, CLIPVisualPipeline

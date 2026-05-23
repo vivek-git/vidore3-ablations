@@ -6,7 +6,7 @@ import re
 from typing import Dict, List
 
 from rank_bm25 import BM25Okapi
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.utils import topk_scores
 

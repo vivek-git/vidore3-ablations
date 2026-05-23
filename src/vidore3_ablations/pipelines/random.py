@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from typing import Any, Dict, List
 
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.pipelines.base import BasePipeline
 
 
 class RandomPipeline(BasePipeline):

@@ -1,6 +1,6 @@
 [project]
 name = "vidore3-ablations"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ablation study of visual document retrieval on ViDoRe v3 technical documents"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,9 +26,11 @@ fiftyone = [
 ]
 
 [project.scripts]
-vidore3-ablate = "vidore3_ablations.run_ablations:main"
-vidore3-viz = "vidore3_ablations.visualize_results:main"
-vidore3-explore = "vidore3_ablations.launch_fiftyone:main"
+vidore3 = "vidore3_ablations.cli.main:main"
+vidore3-ablate = "vidore3_ablations.cli.run:main"
+vidore3-analyze = "vidore3_ablations.cli.analyze:main"
+vidore3-viz = "vidore3_ablations.cli.viz:main"
+vidore3-explore = "vidore3_ablations.cli.explore:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]

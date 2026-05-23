@@ -6,8 +6,8 @@ from typing import Dict, List
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from vidore3_ablations.device_utils import DevicePreference, get_torch_device
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.hardware.device import DevicePreference, get_torch_device
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.utils import batch_iter, topk_scores
 

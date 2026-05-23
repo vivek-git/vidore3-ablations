@@ -1,7 +1,7 @@
 # Smoke test: small subsample, lightweight ablations only
-python -m vidore3_ablations.run_ablations `
+vidore3 run `
   --max-queries 10 `
   --max-corpus 100 `
   --ablations random bm25_ocr dense_text_ocr clip_visual
 
-python -m vidore3_ablations.analyze_results --results-dir results
+vidore3 analyze --results-dir results

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from datasets import load_dataset
-from PIL import Image
+
+from vidore3_ablations.data.dataset import GroundTruthBoxes, VidoreDataset
 
 AVAILABLE_DATASETS = [
     "vidore/vidore_v3_hr",
@@ -20,23 +21,13 @@ AVAILABLE_DATASETS = [
 
 TECHNICAL_DOCUMENTS_DATASET = "vidore/vidore_v3_industrial"
 
-GroundTruthBoxes = Dict[str, Dict[str, List[dict]]]
-
 
 def load_vidore_dataset(
     dataset_name: str,
     split: str = "test",
     language: str | None = None,
-) -> Tuple[
-    List[str],
-    List[str],
-    List[str],
-    List[Image.Image],
-    List[str],
-    Dict[str, Dict[str, int]],
-    Dict[str, str],
-    GroundTruthBoxes,
-]:
+) -> VidoreDataset:
+    """Load queries, corpus pages, qrels, and bounding boxes."""
     if dataset_name not in AVAILABLE_DATASETS:
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
@@ -77,4 +68,13 @@ def load_vidore_dataset(
     if not corpus_images:
         raise ValueError(f"No corpus images found in {dataset_name}")
 
-    return query_ids, queries, corpus_ids, corpus_images, corpus_texts, qrels, query_languages, qrels_boxes
+    return VidoreDataset(
+        query_ids=query_ids,
+        queries=queries,
+        corpus_ids=corpus_ids,
+        corpus_images=corpus_images,
+        corpus_texts=corpus_texts,
+        qrels=qrels,
+        query_languages=query_languages,
+        qrels_boxes=qrels_boxes,
+    )

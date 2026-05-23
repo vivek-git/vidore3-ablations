@@ -8,8 +8,8 @@ import numpy as np
 import torch
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
-from vidore3_ablations.device_utils import DevicePreference, empty_cuda_cache, get_torch_device
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.hardware.device import DevicePreference, empty_cuda_cache, get_torch_device
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.utils import batch_iter, topk_scores
 

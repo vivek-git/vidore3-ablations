@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Dict, List
 
 import numpy as np
-from vidore3_ablations.device_utils import DevicePreference, empty_cuda_cache, release_model
-from vidore3_ablations.evaluator import BasePipeline
+from vidore3_ablations.hardware.device import DevicePreference, empty_cuda_cache, release_model
+from vidore3_ablations.pipelines.base import BasePipeline
 
 from vidore3_ablations.pipelines.clip_visual import CLIPVisualPipeline
 from vidore3_ablations.pipelines.dense_text import DenseTextPipeline
