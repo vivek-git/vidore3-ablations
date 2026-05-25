@@ -45,6 +45,14 @@ ablations:
     pipeline: bm25_text
     args: {}
 
+  query_intent_graph_bm25:
+    description: BM25 with query intent graph node and edge reranking
+    pipeline: query_intent_graph_bm25
+    args:
+      base_weight: 1.0
+      node_weight: 0.35
+      edge_weight: 0.25
+
   dense_text_ocr:
     description: Dense bi-encoder on OCR markdown (text-only modality)
     pipeline: dense_text

@@ -21,9 +21,13 @@ from vidore3_ablations.metric_definitions import (
     DEFAULT_F1_SUCCESS_THRESHOLD,
     DEFAULT_IOU_SUCCESS_THRESHOLD,
 )
+from vidore3_ablations.query_intent import QueryIntentGraph, QueryIntentGraphBuilder
 
 
 class BasePipeline(ABC):
+    def __init__(self) -> None:
+        self.query_intent_graphs: Dict[str, QueryIntentGraph] = {}
+
     def index(
         self,
         corpus_ids: List[str],
@@ -34,6 +38,11 @@ class BasePipeline(ABC):
         self.corpus_ids = corpus_ids
         self.corpus_images = corpus_images
         self.corpus_texts = corpus_texts
+
+    def set_query_intent_graphs(self, graphs: Dict[str, QueryIntentGraph]) -> None:
+        """Attach query intent graphs for graph-aware pipelines."""
+
+        self.query_intent_graphs = graphs
 
     @abstractmethod
     def search(
@@ -177,6 +186,8 @@ def evaluate_retrieval(
         indexing_time = 0.0
 
     start_search = time.time()
+    query_intent_graphs = QueryIntentGraphBuilder().build_many(query_ids, queries)
+    pipeline.set_query_intent_graphs(query_intent_graphs)
     result = pipeline.search(query_ids=query_ids, queries=queries)
     search_time = time.time() - start_search
 

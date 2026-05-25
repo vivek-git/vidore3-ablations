@@ -5,6 +5,7 @@ from vidore3_ablations.pipelines.clip_visual import CLIPTextOnOCRPipeline, CLIPV
 from vidore3_ablations.pipelines.colpali import ColPaliLateInteractionPipeline
 from vidore3_ablations.pipelines.dense_text import DenseTextPipeline
 from vidore3_ablations.pipelines.hybrid import HybridRRFPipeline, HybridWeightedPipeline
+from vidore3_ablations.pipelines.query_intent_graph import QueryIntentGraphBM25Pipeline
 from vidore3_ablations.pipelines.random import RandomPipeline
 from vidore3_ablations.pipelines.registry import PIPELINE_REGISTRY, build_pipeline
 
@@ -16,6 +17,7 @@ __all__ = [
     "DenseTextPipeline",
     "HybridRRFPipeline",
     "HybridWeightedPipeline",
+    "QueryIntentGraphBM25Pipeline",
     "RandomPipeline",
     "PIPELINE_REGISTRY",
     "build_pipeline",
