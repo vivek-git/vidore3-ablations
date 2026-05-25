@@ -10,6 +10,7 @@ The industrial split contains ~5,244 pages from military aircraft technical manu
 |------|----------|-----------|
 | `random` | — | Random baseline |
 | `bm25_ocr` | Text | BM25 on OCR markdown |
+| `query_intent_graph_bm25` | Text | BM25 reranked with query intent graph nodes and edges |
 | `dense_text_ocr` | Text | Sentence-transformer bi-encoder on OCR |
 | `clip_visual` | Visual | CLIP image–text similarity on page images |
 | `clip_visual_half_res` | Visual | CLIP at 50% image resolution |
@@ -101,6 +102,10 @@ python -m vidore3_ablations.analyze_results --results-dir results
 1. Add a pipeline class inheriting `BasePipeline` in `src/vidore3_ablations/pipelines/`.
 2. Register it in `pipelines/registry.py`.
 3. Add an entry under `ablations:` in `configs/ablations.yaml`.
+
+Query intent graphs are built before search and exposed to pipelines via
+`BasePipeline.set_query_intent_graphs()`. Graph-aware pipelines can use the
+shared `vidore3_ablations.query_intent` builder or ignore the hook.
 
 ColPali requires a GPU with ~8GB+ VRAM for full-corpus indexing. Use `--max-corpus` for smoke tests on CPU.
 

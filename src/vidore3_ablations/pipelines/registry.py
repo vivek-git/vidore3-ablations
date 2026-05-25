@@ -11,6 +11,7 @@ from vidore3_ablations.pipelines.clip_visual import CLIPTextOnOCRPipeline, CLIPV
 from vidore3_ablations.pipelines.colpali import ColPaliLateInteractionPipeline
 from vidore3_ablations.pipelines.dense_text import DenseTextPipeline
 from vidore3_ablations.pipelines.hybrid import HybridRRFPipeline, HybridWeightedPipeline
+from vidore3_ablations.pipelines.query_intent_graph import QueryIntentGraphBM25Pipeline
 from vidore3_ablations.pipelines.random import RandomPipeline
 
 PipelineFactory = Callable[..., BasePipeline]
@@ -24,6 +25,7 @@ PIPELINE_REGISTRY: Dict[str, Type[BasePipeline]] = {
     "hybrid_rrf": HybridRRFPipeline,
     "hybrid_weighted": HybridWeightedPipeline,
     "colpali_late_interaction": ColPaliLateInteractionPipeline,
+    "query_intent_graph_bm25": QueryIntentGraphBM25Pipeline,
 }
 
 
