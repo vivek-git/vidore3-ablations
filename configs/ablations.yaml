@@ -108,3 +108,12 @@ ablations:
       model_name: vidore/colpali-v1.3
       batch_size: 4
       score_batch_size: 128
+
+  jina_v5_omni_nano:
+    description: Jina Embeddings v5 Omni Nano retrieval model over page images
+    pipeline: jina_v5_omni_nano
+    args:
+      model_name: jinaai/jina-embeddings-v5-omni-nano-retrieval
+      batch_size: 8
+      document_mode: image
+      modality: vision

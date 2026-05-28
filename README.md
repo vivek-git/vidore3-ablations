@@ -18,6 +18,7 @@ The industrial split contains ~5,244 pages from military aircraft technical manu
 | `hybrid_weighted` | Hybrid | Weighted score fusion (0.5/0.5) |
 | `visual_no_text` | Visual | CLIP visual with OCR blanked |
 | `colpali_late_interaction` | Visual | ColPali MaxSim late interaction (patch-level) |
+| `jina_v5_omni_nano` | Visual | Jina Embeddings v5 Omni Nano retrieval embeddings on page images |
 
 Metrics: NDCG@5/10, Recall@5/10, MAP (via `pytrec_eval`).
 
@@ -82,6 +83,14 @@ Run on a small subsample before the full benchmark (~5k pages):
 python -m vidore3_ablations.run_ablations --max-queries 20 --max-corpus 200 --ablations random bm25_ocr dense_text_ocr
 ```
 
+Smoke test the Jina v5 Omni Nano benchmark separately; the first run downloads
+`jinaai/jina-embeddings-v5-omni-nano-retrieval` and executes trusted remote
+model code from Hugging Face:
+
+```powershell
+python -m vidore3_ablations.run_ablations --max-queries 5 --max-corpus 50 --ablations jina_v5_omni_nano
+```
+
 ## Full ablation sweep
 
 ```powershell
@@ -103,6 +112,8 @@ python -m vidore3_ablations.analyze_results --results-dir results
 3. Add an entry under `ablations:` in `configs/ablations.yaml`.
 
 ColPali requires a GPU with ~8GB+ VRAM for full-corpus indexing. Use `--max-corpus` for smoke tests on CPU.
+Jina v5 Omni Nano requires `transformers>=5.0` and `torch>=2.5`; the default
+ablation loads only the vision+text components via `modality: vision`.
 
 ## References
 
